@@ -1,0 +1,20 @@
+RoadDamage project/
+├── app.py                 # Main application entry point (Routes & Logic)
+├── config.py              # Configuration settings (Paths, Database URI)
+├── database/              # SQLite database storage
+├── model/                 # ML Resources
+│   ├── road_damage_detector.h5  # Trained model file
+│   ├── model_metadata.json      # Performance metrics
+│   └── class_indices.json       # Label mappings
+├── static/                # Static assets
+│   ├── css/               # Stylesheets
+│   ├── js/                # Client-side scripts
+│   └── uploads/           # User uploaded images
+├── templates/             # HTML Templates (Jinja2)
+│   ├── index.html         # Upload page
+│   ├── dashboard.html     # Admin dashboard
+│   ├── analysis.html      # Statistical analysis
+│   └── report.html        # Individual report view
+|---- model_service.py
+|---- model_service.log                          
+└── requirements.txt       # Python dependencies

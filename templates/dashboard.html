@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Road Damage Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-road"></i>
+                <span>Road Damage Detection System</span>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}">Home</a>
+                <a href="{{ url_for('dashboard') }}" class="active">Dashboard</a>
+                <a href="{{ url_for('analysis') }}">Analysis</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Header -->
+    <section class="dashboard-header">
+        <div class="container">
+            <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+            <p>Monitor and manage road damage reports</p>
+        </div>
+    </section>
+
+    <!-- Statistics Cards -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ stats.total }}</h3>
+                        <p>Total Reports</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ stats.damage }}</h3>
+                        <p>Damage Detected</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ stats.no_damage }}</h3>
+                        <p>No Damage</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>{{ stats.pending }}</h3>
+                        <p>Pending Review</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filters and Actions -->
+    <section class="filters-section">
+        <div class="container">
+            <div class="filters-bar">
+                <div class="filters">
+                    <label>Status:</label>
+                    <select id="statusFilter" onchange="applyFilters()">
+                        <option value="all" {% if status_filter=='all' %}selected{% endif %}>All</option>
+                        <option value="pending" {% if status_filter=='pending' %}selected{% endif %}>Pending</option>
+                        <option value="in_progress" {% if status_filter=='in_progress' %}selected{% endif %}>In Progress
+                        </option>
+                        <option value="completed" {% if status_filter=='completed' %}selected{% endif %}>Completed
+                        </option>
+                    </select>
+
+                    <label>Severity:</label>
+                    <select id="severityFilter" onchange="applyFilters()">
+                        <option value="all" {% if severity_filter=='all' %}selected{% endif %}>All</option>
+                        <option value="critical" {% if severity_filter=='critical' %}selected{% endif %}>Critical
+                        </option>
+                        <option value="high" {% if severity_filter=='high' %}selected{% endif %}>High</option>
+                        <option value="medium" {% if severity_filter=='medium' %}selected{% endif %}>Medium</option>
+                        <option value="low" {% if severity_filter=='low' %}selected{% endif %}>Low</option>
+                    </select>
+                </div>
+                <div class="actions">
+                    <a href="{{ url_for('export_csv') }}" class="btn btn-secondary">
+                        <i class="fas fa-download"></i> Export CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reports Table -->
+    <section class="reports-section">
+        <div class="container">
+            <div class="reports-table-wrapper">
+                <table class="reports-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Image</th>
+                            <th>Location</th>
+                            <th>GPS</th>
+                            <th>Prediction</th>
+                            <th>Confidence</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if reports.items %}
+                        {% for report in reports.items %}
+                        <tr>
+                            <td>#{{ report.id }}</td>
+                            <td>
+                                <img src="{{ url_for('static', filename='uploads/' + report.image_filename) }}"
+                                    alt="Road" class="table-thumbnail">
+                            </td>
+                            <td>{{ report.location_name or 'Unknown' }}</td>
+                            <td>
+                                <small>
+                                    {{ "%.6f"|format(report.latitude) }},<br>
+                                    {{ "%.6f"|format(report.longitude) }}
+                                </small>
+                            </td>
+                            <td>
+                                <span
+                                    class="badge badge-{{ 'danger' if report.prediction_class == 'damage' else 'success' }}">
+                                    {{ report.prediction_class|upper }}
+                                </span>
+                            </td>
+                            <td>{{ "%.2f"|format(report.confidence_score * 100) }}%</td>
+                            <td>
+                                <span class="badge badge-severity-{{ report.severity }}">
+                                    {{ report.severity|upper }}
+                                </span>
+                            </td>
+                            <td>
+                                <select class="status-select" data-report-id="{{ report.id }}"
+                                    onchange="updateStatus(this.dataset.reportId, this.value)">
+                                    <option value="pending" {% if report.status=='pending' %}selected{% endif %}>Pending
+                                    </option>
+                                    <option value="in_progress" {% if report.status=='in_progress' %}selected{% endif
+                                        %}>In Progress</option>
+                                    <option value="completed" {% if report.status=='completed' %}selected{% endif %}>
+                                        Completed</option>
+                                </select>
+                            </td>
+                            <td>
+                                <small>{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('view_report', report_id=report.id) }}"
+                                    class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="10" class="text-center">
+                                <p>No reports found</p>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if reports.pages > 1 %}
+            <div class="pagination">
+                {% if reports.has_prev %}
+                <a href="{{ url_for('dashboard', page=reports.prev_num, status=status_filter, severity=severity_filter) }}"
+                    class="btn btn-sm btn-secondary">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+                {% endif %}
+
+                <span class="page-info">
+                    Page {{ reports.page }} of {{ reports.pages }}
+                </span>
+
+                {% if reports.has_next %}
+                <a href="{{ url_for('dashboard', page=reports.next_num, status=status_filter, severity=severity_filter) }}"
+                    class="btn btn-sm btn-secondary">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Road Damage Detection System - Sri Lanka</p>
+        </div>
+    </footer>
+
+    <script>
+        function applyFilters() {
+            const status = document.getElementById('statusFilter').value;
+            const severity = document.getElementById('severityFilter').value;
+            window.location.href = `{{ url_for('dashboard') }}?status=${status}&severity=${severity}`;
+        }
+
+        function updateStatus(reportId, newStatus) {
+            fetch(`/api/update_status/${reportId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Status updated successfully!');
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to update status');
+                });
+        }
+    </script>
+</body>
+
+</html>

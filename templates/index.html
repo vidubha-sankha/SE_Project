@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Road Damage Detection System - Sri Lanka</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-road"></i>
+                <span>Road Damage Detection System</span>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}" class="active">Home</a>
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('analysis') }}">Analysis</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Sri Lanka Road Maintenance Monitoring</h1>
+                <p>AI & Machine Learning Powered Road Damage Detection System</p>
+                <p class="subtitle">Upload road images to automatically detect and classify damage</p>
+
+                {% if not model_loaded %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Warning:</strong> Model not loaded. Please upload your trained model first.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Upload Section -->
+    <section class="upload-section">
+        <div class="container">
+            <div class="upload-card">
+                <h2><i class="fas fa-cloud-upload-alt"></i> Upload Road Image</h2>
+
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <!-- Image Upload -->
+                    <div class="form-group">
+                        <label for="imageInput">
+                            <i class="fas fa-image"></i> Select Road Image *
+                        </label>
+                        <input type="file" id="imageInput" name="image" accept="image/*" required>
+                        <small>Supported: JPG, JPEG, PNG, BMP (Max 16MB)</small>
+                    </div>
+
+                    <!-- Image Preview -->
+                    <div id="imagePreview" class="image-preview" style="display: none;">
+                        <img id="previewImg" src="" alt="Preview">
+                    </div>
+
+                    <!-- GPS Coordinates -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="latitude">
+                                <i class="fas fa-map-marker-alt"></i> Latitude *
+                            </label>
+                            <input type="number" id="latitude" name="latitude" step="0.000001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="longitude">
+                                <i class="fas fa-map-marker-alt"></i> Longitude *
+                            </label>
+                            <input type="number" id="longitude" name="longitude" step="0.000001" required>
+                        </div>
+                    </div>
+
+                    <button type="button" id="getLocationBtn" class="btn btn-secondary">
+                        <i class="fas fa-location-arrow"></i> Get My Location
+                    </button>
+
+                    <!-- Location Name -->
+                    <div class="form-group">
+                        <label for="locationName">
+                            <i class="fas fa-map-pin"></i> Location Name (Optional)
+                        </label>
+                        <input type="text" id="locationName" name="location_name"
+                            placeholder="e.g., Galle Road, Colombo">
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label for="description">
+                            <i class="fas fa-comment"></i> Description (Optional)
+                        </label>
+                        <textarea id="description" name="description" rows="3"
+                            placeholder="Additional details about the road condition..."></textarea>
+                    </div>
+
+                    <!-- Reported By -->
+                    <div class="form-group">
+                        <label for="reportedBy">
+                            <i class="fas fa-user"></i> Your Name (Optional)
+                        </label>
+                        <input type="text" id="reportedBy" name="reported_by" placeholder="Anonymous">
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="submitBtn" class="btn btn-primary">
+                        <i class="fas fa-check-circle"></i> Analyze Road Condition
+                    </button>
+                </form>
+
+                <!-- Loading Spinner -->
+                <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Analyzing image...</p>
+                </div>
+
+                <!-- Result Display -->
+                <div id="resultDisplay" class="result-display" style="display: none;">
+                    <h3><i class="fas fa-chart-line"></i> Analysis Results</h3>
+                    <div class="result-content">
+                        <div class="result-item">
+                            <span class="label">Prediction:</span>
+                            <span id="resultClass" class="value"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Confidence:</span>
+                            <span id="resultConfidence" class="value"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Severity:</span>
+                            <span id="resultSeverity" class="value"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Damage Type:</span>
+                            <span id="resultDamageType" class="value"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Priority:</span>
+                            <span id="resultPriority" class="value"></span>
+                        </div>
+                    </div>
+                    <div class="result-actions">
+                        <a id="viewReportBtn" href="#" class="btn btn-secondary">
+                            <i class="fas fa-eye"></i> View Full Report
+                        </a>
+                        <button id="uploadAnotherBtn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Upload Another
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2>System Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-robot"></i>
+                    <h3>AI Detection</h3>
+                    <p>CNN model with 90-95% accuracy for damage detection</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <h3>GPS Tracking</h3>
+                    <p>Automatic location capture and mapping</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-chart-bar"></i>
+                    <h3>Real-time Analytics</h3>
+                    <p>Comprehensive damage analysis and reports</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-tasks"></i>
+                    <h3>Priority Management</h3>
+                    <p>Automatic severity classification and prioritization</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Road Damage Detection System - Sri Lanka</p>
+            <p>Powered by AI & Machine Learning</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

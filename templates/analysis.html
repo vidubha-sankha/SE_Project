@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis - Road Damage Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-road"></i>
+                <span>Road Damage Detection System</span>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}">Home</a>
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('analysis') }}" class="active">Analysis</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Analysis Header -->
+    <section class="analysis-header">
+        <div class="container">
+            <h1><i class="fas fa-chart-line"></i> Statistical Analysis</h1>
+            <p>Comprehensive road damage analytics and insights</p>
+        </div>
+    </section>
+
+    <!-- Key Metrics -->
+    <section class="metrics-section">
+        <div class="container">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>{{ data.total_reports }}</h3>
+                    <p>Total Reports</p>
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="metric-card">
+                    <h3>{{ data.damage_percentage }}%</h3>
+                    <p>Damage Detection Rate</p>
+                    <i class="fas fa-percent"></i>
+                </div>
+                <div class="metric-card">
+                    <h3>{{ data.avg_confidence }}%</h3>
+                    <p>Average Confidence</p>
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="metric-card">
+                    <h3>{{ data.model_accuracy }}%</h3>
+                    <p>Model Accuracy</p>
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Charts Section -->
+    <section class="charts-section">
+        <div class="container">
+            <div class="charts-grid">
+                <!-- Severity Distribution -->
+                <div class="chart-card">
+                    <h3>Severity Distribution</h3>
+                    <canvas id="severityChart"></canvas>
+                </div>
+
+                <!-- Status Distribution -->
+                <div class="chart-card">
+                    <h3>Status Distribution</h3>
+                    <canvas id="statusChart"></canvas>
+                </div>
+
+                <!-- Damage vs No Damage -->
+                <div class="chart-card">
+                    <h3>Damage Detection Overview</h3>
+                    <canvas id="damageChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Road Damage Detection System - Sri Lanka</p>
+        </div>
+    </footer>
+
+    <!-- Data payload -->
+    <script id="analysis-data" type="application/json">
+        {{ data | tojson | safe }}
+    </script>
+
+    <script>
+        // Load data from JSON script tag to avoid syntax errors in IDE
+        const analysisData = JSON.parse(document.getElementById('analysis-data').textContent);
+
+        // Severity Chart
+        const severityCtx = document.getElementById('severityChart').getContext('2d');
+        new Chart(severityCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Critical', 'High', 'Medium', 'Low'],
+                datasets: [{
+                    data: [
+                        analysisData.severity_counts.critical,
+                        analysisData.severity_counts.high,
+                        analysisData.severity_counts.medium,
+                        analysisData.severity_counts.low
+                    ],
+                    backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#28a745']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true
+            }
+        });
+
+        // Status Chart
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Pending', 'In Progress', 'Completed'],
+                datasets: [{
+                    label: 'Reports',
+                    data: [
+                        analysisData.status_counts.pending,
+                        analysisData.status_counts.in_progress,
+                        analysisData.status_counts.completed
+                    ],
+                    backgroundColor: ['#ffc107', '#17a2b8', '#28a745']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Damage Chart
+        const damageCtx = document.getElementById('damageChart').getContext('2d');
+        new Chart(damageCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Damage Detected', 'No Damage'],
+                datasets: [{
+                    data: [
+                        analysisData.damage_reports,
+                        analysisData.total_reports - analysisData.damage_reports
+                    ],
+                    backgroundColor: ['#dc3545', '#28a745']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true
+            }
+        });
+    </script>
+</body>
+
+</html>

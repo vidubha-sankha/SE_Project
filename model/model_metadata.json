@@ -1,0 +1,21 @@
+{
+    "model_name": "Sri Lanka Road Damage Detection CNN",
+    "creation_date": "2026-02-02 09:51:45",
+    "input_shape": [
+        224,
+        224,
+        3
+    ],
+    "num_classes": 2,
+    "class_names": [
+        "damage",
+        "no_damage"
+    ],
+    "test_accuracy": 0.8269093632698059,
+    "test_precision": 0.8269093632698059,
+    "test_recall": 0.8269093632698059,
+    "total_parameters": 27001634,
+    "training_samples": 13070,
+    "validation_samples": 2800,
+    "test_samples": 2802
+}

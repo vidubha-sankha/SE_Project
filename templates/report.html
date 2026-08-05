@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report #{{ report.id }} - Road Damage Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-road"></i>
+                <span>Road Damage Detection System</span>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}">Home</a>
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('analysis') }}">Analysis</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Report Header -->
+    <section class="report-header">
+        <div class="container">
+            <div class="header-content">
+                <h1><i class="fas fa-file-alt"></i> Report #{{ report.id }}</h1>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Report Details -->
+    <section class="report-details">
+        <div class="container">
+            <div class="report-grid">
+                <!-- Image Section -->
+                <div class="report-image">
+                    <h3><i class="fas fa-image"></i> Road Image</h3>
+                    <img src="{{ url_for('static', filename='uploads/' + report.image_filename) }}" alt="Road Damage"
+                        class="full-image">
+                    <p class="image-filename">{{ report.image_filename }}</p>
+                </div>
+
+                <!-- Details Section -->
+                <div class="report-info">
+                    <h3><i class="fas fa-info-circle"></i> Detection Results</h3>
+
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Prediction:</label>
+                            <span
+                                class="badge badge-{{ 'danger' if report.prediction_class == 'damage' else 'success' }} large">
+                                {{ report.prediction_class|upper }}
+                            </span>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Confidence Score:</label>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill"
+                                    style="--confidence-width: {{ '%.2f'|format(report.confidence_score * 100) }}%; width: var(--confidence-width);">
+                                    {{ "%.2f"|format(report.confidence_score * 100) }}%</div>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Severity:</label>
+                            <span class="badge badge-severity-{{ report.severity }} large">
+                                {{ report.severity|upper }}
+                            </span>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Priority:</label>
+                            <span class="badge badge-priority-{{ report.priority }} large">
+                                {{ report.priority|upper }}
+                            </span>
+                        </div>
+
+                        <div class="info-item full-width">
+                            <label>Damage Type:</label>
+                            <p>{{ report.damage_type }}</p>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Status:</label>
+                            <span class="badge badge-status-{{ report.status }} large">
+                                {{ report.status|replace('_', ' ')|upper }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <h3><i class="fas fa-map-marker-alt"></i> Location Information</h3>
+
+                    <div class="info-grid">
+                        <div class="info-item full-width">
+                            <label>Location Name:</label>
+                            <p>{{ report.location_name or 'Not specified' }}</p>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Latitude:</label>
+                            <p>{{ "%.6f"|format(report.latitude) }}</p>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Longitude:</label>
+                            <p>{{ "%.6f"|format(report.longitude) }}</p>
+                        </div>
+
+                        <div class="info-item full-width">
+                            <label>Map:</label>
+                            <a href="https://www.google.com/maps?q={{ report.latitude }},{{ report.longitude }}"
+                                target="_blank" class="btn btn-primary">
+                                <i class="fas fa-map-marked-alt"></i> View on Google Maps
+                            </a>
+                        </div>
+                    </div>
+
+                    <h3><i class="fas fa-comment"></i> Additional Information</h3>
+
+                    <div class="info-grid">
+                        <div class="info-item full-width">
+                            <label>Description:</label>
+                            <p>{{ report.description or 'No description provided' }}</p>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Reported By:</label>
+                            <p>{{ report.reported_by or 'Anonymous' }}</p>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Reported Date:</label>
+                            <p>{{ report.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Last Updated:</label>
+                            <p>{{ report.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Road Damage Detection System - Sri Lanka</p>
+        </div>
+    </footer>
+</body>
+
+</html>
