@@ -2,5 +2,4 @@ __pycache__/
 *.log
 *.db
 *.h5
-static/uploads/
-git push -u origin main 
+static/uploads/venv/

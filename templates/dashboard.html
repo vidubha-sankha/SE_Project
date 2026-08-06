@@ -170,7 +170,7 @@
                                 </select>
                             </td>
                             <td>
-                                <small>{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                <small>{{ report.created_at.strftime('%Y-%m-%d %H:%M') if report.created_at else 'Unknown' }}</small>
                             </td>
                             <td>
                                 <a href="{{ url_for('view_report', report_id=report.id) }}"
