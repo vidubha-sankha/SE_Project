@@ -1,0 +1,12 @@
+{
+  "name": "se_project",
+  "version": "1.0.0",
+  "description": "Road Damage Detection System",
+  "scripts": {
+    "dev": ".\\venv\\Scripts\\python.exe app.py",
+    "start": ".\\venv\\Scripts\\python.exe app.py",
+    "model": ".\\venv\\Scripts\\python.exe model_service.py"
+  },
+  "author": "",
+  "license": "ISC"
+}
