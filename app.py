@@ -5,12 +5,12 @@ Developer: AI Road Safety Team
 """
 
 import requests
-from flask import Flask, render_template, request, jsonify, url_for
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.utils import secure_filename
+from flask import Flask, render_template, request, jsonify, url_for  # type: ignore
+from flask_sqlalchemy import SQLAlchemy  # type: ignore
+from werkzeug.utils import secure_filename  # type: ignore
 from datetime import datetime
 import os
-import numpy as np
+import numpy as np  # type: ignore
 # Initialize Flask app
 app = Flask(__name__)
 app.config.from_object('config.Config')
