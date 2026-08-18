@@ -2,6 +2,7 @@ import sqlite3
 
 
 def run_query(db_path, query):
+    conn = None  # <-- Fixed: Initialize conn here
     try:
         # Connect to the database
         conn = sqlite3.connect(db_path)

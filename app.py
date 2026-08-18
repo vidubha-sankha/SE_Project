@@ -8,7 +8,7 @@ import requests
 from flask import Flask, render_template, request, jsonify, url_for  # type: ignore
 from flask_sqlalchemy import SQLAlchemy  # type: ignore
 from werkzeug.utils import secure_filename  # type: ignore
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 import numpy as np  # type: ignore
 # Initialize Flask app
@@ -61,11 +61,11 @@ class RoadDamageReport(db.Model):
     priority = db.Column(db.String(50))
 
     # Timestamps
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow)
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc))
 
     def to_dict(self):
         """Convert model to dictionary"""
@@ -212,7 +212,7 @@ def upload_image():
         reported_by = request.form.get('reported_by', 'Anonymous')
 
         # Save uploaded file
-        filename = secure_filename(file.filename)
+        filename = secure_filename(file.filename or "")
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         unique_filename = f"{timestamp}_{filename}"
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
@@ -224,7 +224,7 @@ def upload_image():
 
         if prediction_class is None:
             return jsonify(
-                {'success': False, 'error': 'Error processing image'}), 500
+                {'success': False, 'error': 'Model service unavailable. Please ensure model_service.py is running.'}), 503
 
         # Get priority
         priority = get_priority(severity)
@@ -343,7 +343,7 @@ def update_status(report_id):
 
     if new_status in ['pending', 'in_progress', 'completed']:
         report.status = new_status
-        report.updated_at = datetime.utcnow()
+        report.updated_at = datetime.now(timezone.utc)
         db.session.commit()
         return jsonify({'success': True, 'message': 'Status updated'})
 

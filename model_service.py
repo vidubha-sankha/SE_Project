@@ -4,8 +4,8 @@ import json
 import numpy as np
 from PIL import Image
 try:
-    import tensorflow as tf
-    from tensorflow import keras
+    import tensorflow as tf  # type: ignore
+    from tensorflow import keras  # type: ignore
     TENSORFLOW_AVAILABLE = True
 except ImportError as e:
     print(f"Warning: TensorFlow failed to import: {e}. Running in Mock Mode.")
@@ -27,9 +27,9 @@ model_metadata = None
 
 # FIX: Patch InputLayer to handle 'batch_shape' compatibility issue
 # Verify if InputLayer exists in keras.layers
-if TENSORFLOW_AVAILABLE and hasattr(keras.layers, 'InputLayer'):
+if TENSORFLOW_AVAILABLE and keras is not None and hasattr(keras.layers, 'InputLayer'):  # type: ignore
     # We define a custom InputLayer class that handles 'batch_shape'
-    class PatchedInputLayer(keras.layers.InputLayer):
+    class PatchedInputLayer(keras.layers.InputLayer):  # type: ignore
         def __init__(self, *args, **kwargs):
             if 'batch_shape' in kwargs:
                 # 'batch_shape' is deprecated/unsupported in newer Keras InputLayer
@@ -37,13 +37,24 @@ if TENSORFLOW_AVAILABLE and hasattr(keras.layers, 'InputLayer'):
                 kwargs['batch_input_shape'] = kwargs.pop('batch_shape')
             super().__init__(*args, **kwargs)
 else:
-    PatchedInputLayer = None
+    PatchedInputLayer = object  # type: ignore
 
 # FIX: Patch DTypePolicy for Keras 3 compatibility
 if TENSORFLOW_AVAILABLE:
-    class DTypePolicy(tf.keras.mixed_precision.Policy):
+    _policy_base = getattr(
+        tf.keras.mixed_precision,  # type: ignore
+        'Policy',
+        getattr(
+            tf.keras.mixed_precision,  # type: ignore
+            'DTypePolicy',
+            object))
+
+    class DTypePolicy(_policy_base):  # type: ignore
         def __init__(self, name=None, **kwargs):
-            super().__init__(name=name or "float32")
+            if _policy_base is not object:
+                super().__init__(name=name or "float32")
+            else:
+                self.name = name or "float32"
 
         def get_config(self):
             return {"name": self.name}
@@ -84,7 +95,7 @@ def load_model_resources():
             if 'DTypePolicy' in globals():
                 custom_objects['DTypePolicy'] = DTypePolicy
 
-            model = keras.models.load_model(
+            model = keras.models.load_model(  # type: ignore
                 model_path, custom_objects=custom_objects, compile=False)
             log(" Model loaded successfully!")  # Removed emoji to be safe
         except Exception as e:
@@ -198,6 +209,8 @@ def predict():
         return jsonify({'error': 'No image provided'}), 400
 
     file = request.files['image']
+    if file.filename == '':
+        return jsonify({'error': 'No image selected'}), 400
 
     try:
         img_array = preprocess_image(file)
@@ -205,11 +218,17 @@ def predict():
             return jsonify({'error': 'Invalid image'}), 400
 
         predictions = model.predict(img_array, verbose=0)
-        predicted_index = np.argmax(predictions[0])
-        confidence = float(predictions[0][predicted_index])
 
-        predicted_class = index_to_class[predicted_index] if index_to_class else str(
-            predicted_index)
+        if len(predictions[0]) == 1:
+            p = float(predictions[0][0])
+            predicted_index = 1 if p > 0.5 else 0
+            confidence = p if predicted_index == 1 else 1.0 - p
+        else:
+            predicted_index = int(np.argmax(predictions[0]))
+            confidence = float(predictions[0][predicted_index])
+
+        predicted_class = index_to_class.get(predicted_index, str(
+            predicted_index)) if index_to_class else str(predicted_index)
 
         severity = determine_severity(confidence, predicted_class)
         damage_type = determine_damage_type(predicted_class, confidence)
