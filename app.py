@@ -4,6 +4,11 @@ Sri Lanka Road Maintenance Monitoring System
 Developer: AI Road Safety Team
 """
 
+import utils.net
+import utils.clients
+import utils.http_session
+import utils.transport
+import utils.session
 import requests
 from flask import Flask, render_template, request, jsonify, url_for  # type: ignore
 from flask_sqlalchemy import SQLAlchemy  # type: ignore
@@ -487,12 +492,20 @@ if __name__ == '__main__':
     print("Server starting on port 5000...")
     print(f"Database: {app.config['SQLALCHEMY_DATABASE_URI']}")
 
-    # Check model service
-    service_active = check_model_service()
+    # Check model service with retry loop (since TF/Keras takes a few seconds to load)
+    import time
+    service_active = False
+    for attempt in range(5):
+        if check_model_service():
+            service_active = True
+            break
+        print(f"Waiting for Model Service to become ready (Attempt {attempt + 1}/5)...")
+        time.sleep(2)
+
     if service_active:
         print("Model Service: CONNECTED (Port 5001)")
     else:
-        print("WARNING: Model Service: NOT DETECTED (Please run model_service.py)")
+        print("WARNING: Model Service: NOT DETECTED (Please run model_service.py in a separate terminal via 'npm run model')")
 
     print("=" * 80 + "\n")
 

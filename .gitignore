@@ -4,3 +4,5 @@ __pycache__/
 *.h5
 static/uploads/
 venv/
+config.bat
+node_modules
